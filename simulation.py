@@ -1,10 +1,9 @@
 from random import random, sample
 from random import choices
 import numpy as np
-import matplotlib.pylab as plt
+
 import pandas as pd
 import uuid
-from numpy.random import choice
 from sklearn.preprocessing import MinMaxScaler
 
 import sys
@@ -27,20 +26,6 @@ first_patient = dict({
 
 patients.append(first_patient)
 
-def curveincrease(x):
-    tr = np.array([(1.+2/x)**i/x for i in range(0, x)])
-    tr = tr.reshape(-1, 1)
-    scaler = MinMaxScaler()
-    scaler.fit(tr)
-
-    return scaler.fit_transform(tr).flatten()
-
-
-def curveincreasedecrease(x):
-    x1 = curveincrease(int(x/2))
-    x2 = np.flip(x1)
-    x1 = 0.2 + x1
-    return np.concatenate([x1, x2])
 
 def eq(max_x, x):
     return ((-1/max_x) * x) + 1
@@ -50,9 +35,13 @@ def decreasing_probability(x):
 
 
 def infection(pt_assessment, sv):
+    """This is the main recursive function
 
+    Arguments:
+        pt_assessment {[dict]} -- Dictionary of patient details
+        sv {[dict]} -- Simulation variables dictionary
+    """    
     global infected
-    global pn
 
     transmission_rate = sv['transmission_rate']
     duration_of_illness = sv['duration_of_illness_range']
@@ -70,16 +59,13 @@ def infection(pt_assessment, sv):
         relaxation = True
     except:
         relaxation = False
-    # if infected >= 12:
-    #    return
-
-    #duration = sample(range(duration_of_illness[0], duration_of_illness[1]), 1)[0]
+    
     contagious_start = pt_assessment["events"]["contagious_start"]
     contagious_end = pt_assessment["events"]["contagious_end"]
     diagnosis_day = pt_assessment["events"]['diagnosed']
     infection_day = pt_assessment["events"]['infected']
     patient_id = pt_assessment["id"]
-    # print(parent_infectee)
+
     if infection_day > simulation_duration:
         return
 
@@ -99,11 +85,10 @@ def infection(pt_assessment, sv):
             if (day >= contact_reduction_day):
                 number_of_contacts = sample(
                     range(contact_reduction_range[0], contact_reduction_range[1]), 1)[0]
+
         if day >= diagnosis_day:
-            #print("contacts before quarantine", number_of_contacts)
             number_of_contacts = int(
                 number_of_contacts * (1-(quarantation_rate * quarantation_efficacy)))
-            #print("contacts after quarantine", number_of_contacts)
 
         total_contacts = total_contacts + number_of_contacts
 
@@ -115,8 +100,6 @@ def infection(pt_assessment, sv):
 
                 tr = transmission_rate
                 tr = tr * reduction_probability[day - contagious_start]
-                #tr = tr * (1-(number_of_infectee/total_contacts))
-                #print(contact_day, tr)
                 transmission = choices([True, False], weights=[tr, 1-tr])[0]
                 if transmission:
                     ret = assess_patient(
@@ -157,8 +140,7 @@ def assess_patient(infection_day, parent_id, sv, isinfected=True):
 
         hospitalization = choices([True, False], weights=[
                                   hospitalization_rate, 1-hospitalization_rate])[0]
-        # hospits.append(hospitalization)
-        # print(hospitalization)
+
         if hospitalization:
             hospitalization_day = diagnosis_day + sample(range(diagnosis_to_hospitaliztion[0],
                                                                diagnosis_to_hospitaliztion[1]), 1)[0]
@@ -166,21 +148,17 @@ def assess_patient(infection_day, parent_id, sv, isinfected=True):
             events['symptoms_start'] = infection_day + incubation_period
             events["contagious_end"] = hospitalization_day
             if random() < death_rate:
-                # print("dead")
                 death_day = hospitalization_day + sample(range(hospitalization_period_range[0],
                                                                hospitalization_period_range[1]), 1)[0]
                 events['death'] = death_day
             else:
-                # print("discharge")
                 discharge_day = hospitalization_day + sample(range(hospitalization_period_range[0],
                                                                    hospitalization_period_range[1]), 1)[0]
                 events['discharge'] = discharge_day
 
         else:
-            # negative_day > diagnosis_day < duration_of_illness
+            
             negative_day = sample(range(diagnosis_day, infection_day + incubation_period + duration_of_illness_range[1]), 1)[0]
-            #negative_day = diagnosis_day + \
-            #    sample(range(duration_of_illness_range[0], duration_of_illness_range[1]), 1)[0]
             events['negative'] = negative_day
             events["contagious_end"] = negative_day
     else:
@@ -194,9 +172,8 @@ def assess_patient(infection_day, parent_id, sv, isinfected=True):
 
 def get_results(patients):
     ndf = json_normalize(patients)
-    # print(ndf.columns)
     ndf = ndf.drop('isinfected', axis=1)
-    ndf = ndf.melt(id_vars=['parent_id', 'id']).dropna(
+    ndf = ndf.melt(id_vars=['parent_id', 'id']).drona(
     ).sort_values('value').reset_index()
 
     acu_infected = 0
@@ -255,31 +232,14 @@ def get_results(patients):
     return res
 
 
-def plot(mdf, maxy=10000, maxx=100):
-    plt.figure(figsize=(25, 10))
-    plt.bar(mdf["day"], mdf['active'], label="active", alpha=0.5)
-    plt.bar(mdf["day"], mdf['hospitalized'], label="hospitalized", alpha=0.5)
-    plt.bar(x=mdf["day"], height=mdf['dead'],
-            label="accumulated death", alpha=0.5)
-    plt.hlines(simulation_variables['number_of_beds'], 0,
-               simulation_variables['simulation_duration'], linestyles='dotted', label="Hospital capacity")
-    plt.xlim([0, maxx])
-    plt.ylim([0, maxy])
-    plt.legend()
-    plt.show()
-
-
-def simulate(simulation_variables, toplot=False):
+def simulate(simulation_variables):
     global patients
     infected = 0
-    pn = simulation_variables['simulation_population']
     result = infection(first_patient, sv=simulation_variables)
     print("simulation finished")
     mdf = pd.DataFrame(get_results(patients))
     mdf = pd.DataFrame(mdf.groupby('day').tail(1)).reset_index()
     mdf.drop('index', axis='columns', inplace=True)
-    if toplot:
-        plot(mdf)
     return patients, mdf
 
 
