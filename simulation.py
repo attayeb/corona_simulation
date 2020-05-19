@@ -1,12 +1,8 @@
 from random import random, sample
 from random import choices
-import numpy as np
 
 import pandas as pd
 import uuid
-from sklearn.preprocessing import MinMaxScaler
-
-import sys
 
 from pandas import json_normalize
 
@@ -28,6 +24,29 @@ patients.append(first_patient)
 
 
 def eq(max_x, x):
+    """Returns equally separated decreasing float values from 1 to 0 depending on the maximu value of x
+
+    Parameters
+    ----------
+    max_x : int
+        maximum x value (maximum number of steps)
+    x : int
+        current x value (step)
+
+    Returns
+    -------
+    float
+        y value
+
+    Example
+    -------
+    >>> eq(3, 0)
+    1.0
+    >>> eq(3, 1)
+    0.6666666666666667
+    >>> eq(3, 3)
+    0.0
+    """
     return ((-1/max_x) * x) + 1
 
 def decreasing_probability(x):
@@ -112,6 +131,24 @@ def infection(pt_assessment, sv):
 
 
 def assess_patient(infection_day, parent_id, sv, isinfected=True):
+    """Gives patient characteristics randomly depending on simulation_variable input
+
+    Parameters
+    ----------
+    infection_day : int
+        contact day = the day getting infected
+    parent_id : str
+        the id of the case who transmitted the infection
+    sv : dict
+        simulation_variable dictionary
+    isinfected : bool, optional
+        Determines if the case is infected after contact, by default True
+
+    Returns
+    -------
+    dict
+        The details of the case attributes.
+    """
     hospitalization_period_range = sv['hospitalization_period_range']
     duration_of_illness_range = sv['duration_of_illness_range']
     incubation_period_range = sv['incubation_period_range']
@@ -171,6 +208,20 @@ def assess_patient(infection_day, parent_id, sv, isinfected=True):
 
 
 def get_results(patients):
+    """Summarizes the simulated results
+
+    Parameters
+    ----------
+    patients : list of dictionaries
+        The attributes of the simulated cases 
+
+    Returns
+    -------
+    list
+        Daily statistics of simultion results.
+    """
+    
+
     ndf = json_normalize(patients)
     ndf = ndf.drop('isinfected', axis=1)
     ndf = ndf.melt(id_vars=['parent_id', 'id']).drona(
@@ -233,6 +284,19 @@ def get_results(patients):
 
 
 def simulate(simulation_variables):
+    """Simulation running (main function)
+
+    Parameters
+    ----------
+    simulation_variables : dict
+        The details of the simulation parameters.
+
+    Returns
+    -------
+    list, pandas.DataFrame
+        list: The cases list of dictionaries, containing the details of the simulation result.
+        pandas.DataFrame: Daily statistics of simulation.
+    """
     global patients
     infected = 0
     result = infection(first_patient, sv=simulation_variables)
