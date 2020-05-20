@@ -54,12 +54,16 @@ def decreasing_probability(x):
 
 
 def infection(pt_assessment, sv):
-    """This is the main recursive function
+    """The main simulation function
 
-    Arguments:
-        pt_assessment {[dict]} -- Dictionary of patient details
-        sv {[dict]} -- Simulation variables dictionary
-    """    
+    Parameters
+    ----------
+    pt_assessment : dict
+        Patient attributes
+    sv : dict
+        simultaion variables
+    """
+      
     global infected
 
     transmission_rate = sv['transmission_rate']
@@ -224,7 +228,7 @@ def get_results(patients):
 
     ndf = json_normalize(patients)
     ndf = ndf.drop('isinfected', axis=1)
-    ndf = ndf.melt(id_vars=['parent_id', 'id']).drona(
+    ndf = ndf.melt(id_vars=['parent_id', 'id']).dropna(
     ).sort_values('value').reset_index()
 
     acu_infected = 0
