@@ -9,17 +9,22 @@ Repository files
 ================
 * simulation.py: The main simulation code
 * cli.py: Command line interface
+* Summary-analysis.ipynb: Jupyter notebook for the analysis and figures creation
+* Results/: folder contains the smmary of the resulted simulation
+
+Raw files of the simulation results are not included because of their big number and size.
 
 Pre-requirment
 ==============
 This code is pretty simple, no specific packages are required other than the usual packages:
 * Need to be installed:
-  * click [Need to be installed]
-  * pandas [Need to be installed]
-  * Numpy [Need to be installed]
+  * click 
+  * pandas
+  * Numpy 
+  * networkx
 * Standard library packages:
-  * json [Standard library package]
-  * gz [standard library package]
+  * json 
+  * gz 
 
 Command line interface
 ======================
@@ -35,4 +40,9 @@ Options:
   --contact_reduction_day INTEGER
   --relaxation INTEGER
   --help                          Show this message and exit.
+```
+
+Example:
+```
+$ python cli.py --output "test.json.gz" --simulation_variables_file three_percent_loose_sv.txt --simulation_duration 20 --contact_reduction_day 10
 ```
