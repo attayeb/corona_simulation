@@ -3,7 +3,7 @@ The impact of community containment implementation timing on the spread of COVID
 Attayeb Mohsen and Ahmed Alarabi
 ---
 
-This repository is the companion for the paper submitted to F1000Research
+This repository is the companion for the paper submitted to F1000Research ((https://doi.org/10.12688/f1000research.24156.1) [under peer review])
 
 Repository files
 ================
